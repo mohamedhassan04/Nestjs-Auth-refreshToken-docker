@@ -40,4 +40,7 @@ export class CreateUserDto {
     one special character`,
   })
   password: string;
+
+  @IsOptional()
+  profileImage: string;
 }

@@ -17,4 +17,7 @@ export class User extends Node {
 
   @Column({ type: 'varchar' })
   password: string;
+
+  @Column({ type: 'varchar', default: '' })
+  profileImage: string;
 }

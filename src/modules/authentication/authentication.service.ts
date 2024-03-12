@@ -12,8 +12,8 @@ export class AuthenticationService {
   ) {}
 
   /* Validate user credentials */
-  async validateUser(username: string, password: string) {
-    const user = await this.userService.findOneUser(username);
+  async validateUser(email: string, password: string) {
+    const user = await this.userService.findOneUser(email);
     if (user && (await bcrypt.compare(password, user.password))) {
       const { password, ...result } = user;
       return result;
@@ -23,17 +23,17 @@ export class AuthenticationService {
   /* Login function */
   async login(user: User) {
     const payload = {
-      username: user.username,
+      email: user.email,
       sub: {
         id: user.id,
         name: user.name,
-        username: user.username,
+        email: user.email,
       },
     };
     return {
       id: user.id,
       name: user.name,
-      username: user.username,
+      email: user.email,
       access_token: this.jwtService.sign(payload),
       refresh_token: this.jwtService.sign(payload, { expiresIn: '7d' }),
     };
@@ -42,11 +42,11 @@ export class AuthenticationService {
   /* Login function */
   async refreshToken(user: User) {
     const payload = {
-      username: user.username,
+      email: user.email,
       sub: {
         id: user.id,
         name: user.name,
-        username: user.username,
+        email: user.email,
       },
     };
     return {

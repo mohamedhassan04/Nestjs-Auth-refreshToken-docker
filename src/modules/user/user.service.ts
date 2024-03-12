@@ -4,13 +4,16 @@ import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User) private readonly _userRepo: Repository<User>,
+    private cloudinaryService: CloudinaryService,
   ) {}
-  async register(createUserDto: CreateUserDto) {
+  async register(createUserDto: CreateUserDto, file: Express.Multer.File) {
     // Check if the username already exists
     const existingUser = await this._userRepo.findOne({
       where: { username: createUserDto.username },
@@ -20,7 +23,13 @@ export class UserService {
       throw new ConflictException('Username already exists');
     }
 
-    const user = await this._userRepo.create(createUserDto);
+    // Upload image to Cloudinary
+    const cloudinaryResponse = await this.cloudinaryService.uploadImage(file);
+
+    const user = await this._userRepo.create({
+      ...createUserDto,
+      profileImage: cloudinaryResponse.secure_url, // Assuming you have a 'profileImageUrl' field in your User entity
+    });
     // Hash password
     const salt = await bcrypt.genSalt();
     const passwordHash = createUserDto.password;
@@ -35,9 +44,9 @@ export class UserService {
     return result;
   }
 
-  async findOneUser(username: string) {
+  async findOneUser(email: string) {
     return await this._userRepo.findOne({
-      where: { username: username },
+      where: { email: email },
     });
   }
   /**
@@ -50,5 +59,40 @@ export class UserService {
       delete user.password;
     });
     return users;
+  }
+
+  async update(
+    file: Express.Multer.File,
+    id: string,
+    updateUserDto: UpdateUserDto,
+  ) {
+    const { username, age, password, name, email } = updateUserDto;
+    const profile = await this._userRepo.findOneBy({ id: id });
+    if (profile) {
+      if (file) {
+        await this._userRepo.update(
+          {
+            id: id,
+          },
+          {
+            ...updateUserDto,
+            profileImage: file?.filename,
+          },
+        );
+        return { msg: 'profile updated successfully.' };
+      }
+
+      // await this._userRepo.update(
+      //   {
+      //     id: id,
+      //   },
+      //   {
+      //     userName: userName,
+      //     userAge: userAge,
+      //   },
+      // );
+      // return res.status(200).json({ msg: 'profile updated successfully.' });
+    }
+    return { msg: 'profile not found.' };
   }
 }

@@ -1,9 +1,18 @@
-import { Body, Controller, Post, Request, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  Request,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 import { AuthenticationService } from './authentication.service';
 import { LocalAuthGuard } from './guard/local-auth.guard';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { UserService } from '../user/user.service';
 import { RefreshJwtAuthGuard } from './guard/refresh-jwt-auth.guard';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('auth')
 export class AuthenticationController {
@@ -25,8 +34,12 @@ export class AuthenticationController {
   //@desc Register user
   //@Path: /register
   @Post('register')
-  async register(@Body() createUserDto: CreateUserDto) {
-    return await this.userService.register(createUserDto);
+  @UseInterceptors(FileInterceptor('file'))
+  async register(
+    @Body() createUserDto: CreateUserDto,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return await this.userService.register(createUserDto, file);
   }
 
   //@Method POST

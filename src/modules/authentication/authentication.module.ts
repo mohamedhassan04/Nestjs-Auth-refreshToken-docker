@@ -8,6 +8,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from '../user/entities/user.entity';
 import { JwtStrategy } from './strategies/jwt-strategy';
 import { RefreshJwtStrategy } from './strategies/refreshToken-startegy';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 
 /* If we import JwtModule, we don't need to import JwtService */
 @Module({
@@ -21,6 +22,7 @@ import { RefreshJwtStrategy } from './strategies/refreshToken-startegy';
   providers: [
     AuthenticationService,
     UserService,
+    CloudinaryService,
     LocalStrategy,
     JwtStrategy,
     RefreshJwtStrategy,
