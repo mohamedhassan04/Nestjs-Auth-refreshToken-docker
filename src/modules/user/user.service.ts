@@ -6,17 +6,19 @@ import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
+import { EmailService } from 'src/shared/mail.service';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User) private readonly _userRepo: Repository<User>,
     private cloudinaryService: CloudinaryService,
+    private readonly emailService: EmailService,
   ) {}
   async register(createUserDto: CreateUserDto, file: Express.Multer.File) {
     // Check if the username already exists
     const existingUser = await this._userRepo.findOne({
-      where: { username: createUserDto.username },
+      where: { email: createUserDto.email },
     });
 
     if (existingUser) {
@@ -24,12 +26,19 @@ export class UserService {
     }
 
     // Upload image to Cloudinary
-    const cloudinaryResponse = await this.cloudinaryService.uploadImage(file);
+    // const cloudinaryResponse = await this.cloudinaryService.uploadImage(file);
 
     const user = await this._userRepo.create({
       ...createUserDto,
-      profileImage: cloudinaryResponse.secure_url, // Assuming you have a 'profileImageUrl' field in your User entity
+      // profileImage: cloudinaryResponse.secure_url, // Assuming you have a 'profileImageUrl' field in your User entity
     });
+
+    // Send registration email
+    // await this.emailService.sendRegistrationEmail(
+    //   createUserDto.email,
+    //   createUserDto.password,
+    // );
+
     // Hash password
     const salt = await bcrypt.genSalt();
     const passwordHash = createUserDto.password;
@@ -61,38 +70,15 @@ export class UserService {
     return users;
   }
 
-  async update(
-    file: Express.Multer.File,
-    id: string,
-    updateUserDto: UpdateUserDto,
-  ) {
-    const { username, age, password, name, email } = updateUserDto;
-    const profile = await this._userRepo.findOneBy({ id: id });
-    if (profile) {
-      if (file) {
-        await this._userRepo.update(
-          {
-            id: id,
-          },
-          {
-            ...updateUserDto,
-            profileImage: file?.filename,
-          },
-        );
-        return { msg: 'profile updated successfully.' };
-      }
-
-      // await this._userRepo.update(
-      //   {
-      //     id: id,
-      //   },
-      //   {
-      //     userName: userName,
-      //     userAge: userAge,
-      //   },
-      // );
-      // return res.status(200).json({ msg: 'profile updated successfully.' });
-    }
-    return { msg: 'profile not found.' };
+  async findAllPaginationUsers(page: number): Promise<User[]> {
+    const skip = (page - 1) * 5;
+    const users = await this._userRepo.find({
+      take: 5,
+      skip: skip,
+    });
+    users.map((user) => {
+      delete user.password;
+    });
+    return users;
   }
 }

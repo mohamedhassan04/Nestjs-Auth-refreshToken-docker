@@ -9,6 +9,7 @@ import { User } from '../user/entities/user.entity';
 import { JwtStrategy } from './strategies/jwt-strategy';
 import { RefreshJwtStrategy } from './strategies/refreshToken-startegy';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
+import { EmailService } from 'src/shared/mail.service';
 
 /* If we import JwtModule, we don't need to import JwtService */
 @Module({
@@ -23,6 +24,7 @@ import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
     AuthenticationService,
     UserService,
     CloudinaryService,
+    EmailService,
     LocalStrategy,
     JwtStrategy,
     RefreshJwtStrategy,

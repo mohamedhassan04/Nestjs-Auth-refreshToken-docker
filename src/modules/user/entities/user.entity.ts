@@ -6,7 +6,7 @@ export class User extends Node {
   @Column({ type: 'varchar', length: 30 })
   name: string;
 
-  @Column({ type: 'varchar', length: 15 })
+  @Column({ type: 'varchar', length: 15, nullable: true })
   username: string;
 
   @Column({ type: 'varchar', length: 40 })
